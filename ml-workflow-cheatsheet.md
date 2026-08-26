@@ -236,6 +236,10 @@ Never accidentally include the target inside `X`.
 # 6. Split before fitting learned preprocessing
 
 ```python
+from sklearn.model_selection import train_test_split
+```
+
+```python
 X_train, X_test, y_train, y_test = train_test_split(
     X,
     y,
@@ -274,6 +278,13 @@ categorical_features = [
 ---
 
 # 8. Build preprocessing
+
+```python
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+```
 
 Numeric pipeline:
 
@@ -335,6 +346,11 @@ preprocessor = ColumnTransformer(
 # 9. Build one pipeline: preprocessing + model
 
 ```python
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import Pipeline
+```
+
+```python
 model = Pipeline(
     steps=[
         (
@@ -364,6 +380,10 @@ Before celebrating a model, compare it with something trivial.
 For a binary target:
 
 ```python
+from sklearn.metrics import accuracy_score
+```
+
+```python
 majority_class = y_train.mode()[0]
 
 baseline_pred = np.full(
@@ -384,6 +404,10 @@ A model that cannot beat a reasonable baseline is not useful just because it run
 ---
 
 # 11. Cross-validate on training data
+
+```python
+from sklearn.model_selection import cross_validate
+```
 
 ```python
 cv_results = cross_validate(
@@ -450,6 +474,14 @@ y_prob = model.predict_proba(X_test)[:, 1]
 
 # 14. Evaluate classification
 
+```python
+from sklearn.metrics import (
+    accuracy_score,
+    classification_report,
+    roc_auc_score,
+)
+```
+
 Accuracy:
 
 ```python
@@ -487,6 +519,10 @@ print(
 ---
 
 # 15. Confusion matrix
+
+```python
+from sklearn.metrics import ConfusionMatrixDisplay
+```
 
 ```python
 ConfusionMatrixDisplay.from_predictions(
@@ -626,6 +662,10 @@ Be careful:
 
 # 19. Model-agnostic permutation importance
 
+```python
+from sklearn.inspection import permutation_importance
+```
+
 Permutation importance can be used with the complete pipeline:
 
 ```python
@@ -704,6 +744,7 @@ Example tree model:
 
 ```python
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.pipeline import Pipeline
 ```
 
 Reuse preprocessing:
@@ -815,6 +856,7 @@ from sklearn.metrics import (
     mean_squared_error,
     r2_score,
 )
+from sklearn.pipeline import Pipeline
 ```
 
 Pipeline:

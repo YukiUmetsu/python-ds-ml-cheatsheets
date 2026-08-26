@@ -14,14 +14,18 @@ NumPy is mainly about **fast N-dimensional arrays and vectorized numerical opera
 a = np.array([1, 2, 3])
 b = np.array([[1, 2], [3, 4]])
 
-np.zeros((3, 4))
-np.ones((2, 3))
-np.full((2, 3), 7)
+np.zeros((2, 3))         # [[0., 0., 0.], [0., 0., 0.]]
+np.ones((2, 3))          # [[1., 1., 1.], [1., 1., 1.]]
+np.full((2, 3), 7)       # [[7, 7, 7], [7, 7, 7]]
 
-np.arange(0, 10, 2)      # 0, 2, 4, 6, 8
-np.linspace(0, 1, 5)     # 5 evenly spaced values
+np.arange(5)             # [0, 1, 2, 3, 4]     stop only
+np.arange(2, 8)          # [2, 3, 4, 5, 6, 7]  start, stop
+np.arange(0, 10, 2)      # [0, 2, 4, 6, 8]     start, stop, step
+# stop is exclusive (like range)
 
-np.eye(3)                 # identity matrix
+np.linspace(0, 1, 5)     # 5 evenly spaced values from 0 to 1 inclusive
+
+np.eye(3)                # [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
 ```
 
 ### Create from existing data
@@ -122,17 +126,74 @@ a[[0, 2, 3]]
 
 ## 7. Reshape
 
+`reshape` rearranges the same elements into a new shape. Product of dims must equal `size`.
+
 ```python
 a = np.arange(12)
+# [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+```
 
+2 args → 2D `(rows, cols)`:
+
+```python
 a.reshape(3, 4)
+# [[ 0,  1,  2,  3],
+#  [ 4,  5,  6,  7],
+#  [ 8,  9, 10, 11]]
+```
+
+3 args → 3D `(depth, rows, cols)` (or any 3 dims):
+
+```python
 a.reshape(2, 2, 3)
+# [[[ 0,  1,  2],
+#   [ 3,  4,  5]],
+#
+#  [[ 6,  7,  8],
+#   [ 9, 10, 11]]]
+# shape (2, 2, 3): 2 blocks, each 2x3
+```
 
-a.reshape(-1, 1)   # column vector
-a.reshape(1, -1)   # row vector
+`-1` means “infer this dimension”:
 
-a.ravel()          # flatten, view when possible
-a.flatten()        # flatten, copy
+```python
+a.reshape(-1, 1)   # (12, 1) column vector
+a.reshape(1, -1)   # (1, 12) row vector
+a.reshape(2, -1)   # (2, 6)
+a.reshape(2, 2, -1)  # (2, 2, 3)
+```
+
+### ravel vs flatten
+
+Both turn the array into 1D. Difference: view vs copy.
+
+```python
+m = np.array([
+    [1, 2, 3],
+    [4, 5, 6],
+])
+
+m.ravel()
+# [1, 2, 3, 4, 5, 6]   # usually a view (shares memory)
+
+m.flatten()
+# [1, 2, 3, 4, 5, 6]   # always a copy
+```
+
+Changing a ravel result can change `m`; changing a flatten result does not:
+
+```python
+r = m.ravel()
+r[0] = 99
+m
+# [[99, 2, 3],
+#  [ 4, 5, 6]]
+
+f = m.flatten()
+f[0] = 0
+m
+# [[99, 2, 3],
+#  [ 4, 5, 6]]   # unchanged by f
 ```
 
 ---
@@ -153,31 +214,124 @@ np.squeeze(np.array([[[1], [2]]]))
 
 ## 9. Transpose / swap axes
 
+### Transpose (2D)
+
+Rows become columns:
+
 ```python
+m = np.array([
+    [1, 2, 3],
+    [4, 5, 6],
+])
+# shape (2, 3)
+
 m.T
-np.transpose(m)
+# [[1, 4],
+#  [2, 5],
+#  [3, 6]]   shape (3, 2)
+
+np.transpose(m)   # same as m.T for 2D
 ```
+
+### Swap axes (any ndim)
+
+`swapaxes(i, j)` exchanges two axes. For 2D, `swapaxes(0, 1)` == transpose:
+
+```python
+m.swapaxes(0, 1)   # same as m.T
+```
+
+3D example — think `(batch, rows, cols)`:
+
+```python
+x = np.arange(24).reshape(2, 3, 4)
+# shape (2, 3, 4)
+
+x.swapaxes(1, 2)
+# shape (2, 4, 3)  — rows <-> cols within each batch
+
+np.transpose(x, axes=(0, 2, 1))
+# same result: reorder axes explicitly
+```
+
+`T` / default `transpose` reverse all axes. Prefer `swapaxes` / `transpose(..., axes=...)` when you only want specific axes moved.
 
 ---
 
 ## 10. Combine arrays
+
+### Concatenate (join along an existing axis)
 
 ```python
 a = np.array([1, 2])
 b = np.array([3, 4])
 
 np.concatenate([a, b])
-np.stack([a, b])            # new axis
-np.vstack([a, b])           # vertical
-np.hstack([a, b])           # horizontal
+# [1, 2, 3, 4]
 ```
 
-For 2D arrays:
+2D:
 
 ```python
-np.concatenate([x, y], axis=0)  # add rows
-np.concatenate([x, y], axis=1)  # add columns
+x = np.array([[1, 2], [3, 4]])
+y = np.array([[5, 6], [7, 8]])
+
+np.concatenate([x, y], axis=0)  # add rows  -> (4, 2)
+np.concatenate([x, y], axis=1)  # add cols  -> (2, 4)
 ```
+
+### Stack (join along a *new* axis)
+
+```python
+a = np.array([1, 2, 3])
+b = np.array([4, 5, 6])
+
+np.stack([a, b])
+# [[1, 2, 3],
+#  [4, 5, 6]]          shape (2, 3)  — new axis=0
+
+np.stack([a, b], axis=1)
+# [[1, 4],
+#  [2, 5],
+#  [3, 6]]              shape (3, 2)  — new axis=1
+```
+
+### vstack / hstack
+
+```python
+a = np.array([1, 2, 3])
+b = np.array([4, 5, 6])
+
+np.vstack([a, b])
+# [[1, 2, 3],
+#  [4, 5, 6]]          # stack as rows
+
+np.hstack([a, b])
+# [1, 2, 3, 4, 5, 6]   # side by side (1D)
+```
+
+2D:
+
+```python
+x = np.array([[1, 2], [3, 4]])
+y = np.array([[5, 6], [7, 8]])
+
+np.vstack([x, y])   # same as concatenate(..., axis=0)
+# [[1, 2],
+#  [3, 4],
+#  [5, 6],
+#  [7, 8]]
+
+np.hstack([x, y])   # same as concatenate(..., axis=1)
+# [[1, 2, 5, 6],
+#  [3, 4, 7, 8]]
+```
+
+Rule of thumb:
+
+- `concatenate` — same ndim, join on existing axis
+- `stack` — create a new axis
+- `vstack` / `hstack` — shortcuts for vertical / horizontal join
 
 ---
 
@@ -257,29 +411,55 @@ Compare shapes from the **right**. Dimensions are compatible when they are:
 
 ## 14. Aggregations
 
+Reduce many values to a summary. Methods like `a.sum()` exist on arrays; some only as functions (`np.median`).
+
 ```python
-a.sum()
-a.mean()
-a.median()             # ERROR: ndarray has no median method
-np.median(a)
+a = np.array([1., 2., 3., 4.])
 
-a.min()
-a.max()
-a.std()
-a.var()
+a.sum()       # 10.0   total
+a.mean()      # 2.5    average
+np.median(a)  # 2.5    middle value (no a.median())
+a.min()       # 1.0
+a.max()       # 4.0
+a.std()       # spread (population by default for ndarray)
+a.var()       # variance
 
-a.argmin()
-a.argmax()
+a.argmin()    # index of min -> 0
+a.argmax()    # index of max -> 3
+```
+
+Also useful:
+
+```python
+a.prod()                    # product of all elements
+np.percentile(a, [25, 50, 75])
+np.quantile(a, [0.25, 0.5, 0.75])
 ```
 
 ### By axis
 
+`axis` is the dimension you collapse:
+
 ```python
-X.sum(axis=0)      # aggregate down rows -> one value per column
-X.sum(axis=1)      # aggregate across columns -> one value per row
+X = np.array([
+    [1, 2, 3],
+    [4, 5, 6],
+])
+
+X.sum(axis=0)   # [5, 7, 9]  down rows -> one per column
+X.sum(axis=1)   # [6, 15]    across cols -> one per row
 
 X.mean(axis=0)
 X.std(axis=0)
+X.argmax(axis=1)  # [2, 2]  index of max in each row
+```
+
+`keepdims=True` keeps the reduced axis as size 1 (handy for broadcasting):
+
+```python
+X.mean(axis=1, keepdims=True)
+# [[2.],
+#  [5.]]   shape (2, 1)
 ```
 
 ---
@@ -296,25 +476,105 @@ np.cumprod(a)
 ## 16. Unique values and counts
 
 ```python
+a = np.array([3, 1, 2, 1, 3])
+
 np.unique(a)
+# [1, 2, 3]
 
 values, counts = np.unique(a, return_counts=True)
+# values: [1, 2, 3]
+# counts: [2, 1, 2]
 ```
 
 ---
 
-## 17. Sort
+## 17. Set operations
+
+Treat 1D arrays like sets (results are sorted unique):
 
 ```python
-np.sort(a)
+a = np.array([1, 2, 3, 4])
+b = np.array([3, 4, 5, 6])
 
-indices = np.argsort(a)
-a[indices]
+np.intersect1d(a, b)   # in both -> [3, 4]
+np.union1d(a, b)       # in either -> [1, 2, 3, 4, 5, 6]
+np.setdiff1d(a, b)     # in a but not b -> [1, 2]
+np.setdiff1d(b, a)     # in b but not a -> [5, 6]
 ```
 
 ---
 
-## 18. Conditional values
+## 18. Sort
+
+`np.sort` returns a sorted **copy**. `argsort` returns the indices that would sort.
+
+```python
+a = np.array([30, 10, 20])
+
+np.sort(a)
+# [10, 20, 30]
+
+a.sort()              # in-place; returns None
+```
+
+### Argsort (sort by index)
+
+```python
+a = np.array([30, 10, 20])
+
+idx = np.argsort(a)
+# [1, 2, 0]           positions of 10, 20, 30
+
+a[idx]
+# [10, 20, 30]
+```
+
+Use argsort to reorder a related array the same way:
+
+```python
+names = np.array(["c", "a", "b"])
+scores = np.array([30, 10, 20])
+
+names[np.argsort(scores)]
+# ['a', 'b', 'c']
+```
+
+### Sort along an axis (2D)
+
+```python
+m = np.array([
+    [3, 1, 2],
+    [9, 7, 8],
+])
+
+np.sort(m, axis=1)    # sort within each row
+# [[1, 2, 3],
+#  [7, 8, 9]]
+
+np.sort(m, axis=0)    # sort within each column
+# [[3, 1, 2],
+#  [9, 7, 8]]
+
+np.argsort(m, axis=1) # indices within each row
+```
+
+Descending:
+
+```python
+np.sort(a)[::-1]
+a[np.argsort(-a)]     # also works for numeric arrays
+```
+
+Partial / nth element:
+
+```python
+np.partition(a, 1)    # element at index 1 is in sorted position;
+                      # left side smaller, right side larger (unordered)
+```
+
+---
+
+## 19. Conditional values
 
 ```python
 np.where(a > 0, 1, 0)
@@ -330,7 +590,7 @@ np.clip(a, 0, 100)
 
 ---
 
-## 19. Missing / infinite values
+## 20. Missing / infinite values
 
 ```python
 np.isnan(a)
@@ -350,7 +610,7 @@ np.nan_to_num(a, nan=0.0)
 
 ---
 
-## 20. Compare floating-point values
+## 21. Compare floating-point values
 
 Avoid:
 
@@ -367,7 +627,7 @@ np.allclose(A, B)
 
 ---
 
-## 21. Random numbers
+## 22. Random numbers
 
 Use the modern generator API:
 
@@ -390,7 +650,7 @@ rng = np.random.default_rng(42)
 
 ---
 
-## 22. Statistics
+## 23. Statistics
 
 ```python
 np.mean(a)
@@ -406,7 +666,7 @@ np.corrcoef(x, y)
 
 ---
 
-## 23. Linear algebra
+## 24. Linear algebra
 
 ```python
 A @ B
@@ -433,7 +693,7 @@ x = np.linalg.inv(A) @ b
 
 ---
 
-## 24. Save/load
+## 25. Save/load
 
 Binary NumPy format:
 
@@ -460,7 +720,7 @@ X = np.loadtxt("data.csv", delimiter=",")
 
 ---
 
-## 25. Vectorization
+## 26. Vectorization
 
 Avoid Python loops when a vectorized operation expresses the same calculation.
 
@@ -480,7 +740,7 @@ result = a * 2 + 1
 
 ---
 
-## 26. Copies vs views
+## 27. Copies vs views
 
 Slices often share memory:
 
@@ -500,7 +760,7 @@ b = a[:2].copy()
 
 ---
 
-## 27. Useful ML patterns
+## 28. Useful ML patterns
 
 ### Standardize manually
 
@@ -536,7 +796,7 @@ accuracy = np.mean(y_true == y_pred)
 
 ---
 
-## 28. High-value functions to remember exist
+## 29. High-value functions to remember exist
 
 ```text
 array
@@ -545,10 +805,12 @@ arange
 linspace
 zeros / ones / full
 reshape
-concatenate / stack
+transpose / swapaxes
+concatenate / stack / vstack / hstack
 where
 unique
-sort / argsort
+intersect1d / union1d / setdiff1d
+sort / argsort / partition
 mean / median / std / percentile
 sum / min / max / argmin / argmax
 isnan / isfinite
