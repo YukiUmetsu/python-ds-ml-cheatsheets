@@ -91,12 +91,54 @@ ax.barh(categories, values)
 
 ## 6. Histogram
 
+Counts how many values fall into each **bin** (value range).
+
 ```python
 fig, ax = plt.subplots()
 
-ax.hist(df["age"], bins=20)
+ax.hist(df["age"], bins=20)   # 20 equal-width bins
 
 plt.show()
+```
+
+`bins=20` — split the data range into 20 intervals of equal width.  
+`bins=[0, 18, 25, 35, 50, 100]` — custom bin edges.  
+More bins → finer detail; fewer bins → smoother shape.
+
+### Log histogram
+
+Use when values span many orders of magnitude (income, file sizes, etc.).
+
+Log-spaced bins on x:
+
+```python
+data = df["income"].dropna()
+data = data[data > 0]   # log scale needs positive values
+
+fig, ax = plt.subplots()
+
+bins = np.logspace(
+    np.log10(data.min()),
+    np.log10(data.max()),
+    20,
+)   # bin edges grow by constant ratio, not constant width
+
+ax.hist(data, bins=bins)
+ax.set_xscale("log")   # x-axis ticks at 1, 10, 100, 1000, ...
+
+ax.set_xlabel("Income")
+ax.set_ylabel("Count")
+plt.show()
+```
+
+`set_xscale("log")` — equal visual distance = multiply by 10 (not add 10).  
+`set_yscale("log")` — same idea for counts on the y-axis.
+
+Log count on y (when a few bins dominate):
+
+```python
+ax.hist(data, bins=50)
+ax.set_yscale("log")   # small counts stay visible
 ```
 
 ---
@@ -227,10 +269,14 @@ ax.tick_params(axis="x", labelrotation=45)
 
 ## 15. Log scale
 
+Default axes are **linear**: tick marks are evenly spaced (0, 10, 20, 30).
+
 ```python
-ax.set_xscale("log")
-ax.set_yscale("log")
+ax.set_xscale("log")   # x: 1, 10, 100, 1000 ...
+ax.set_yscale("log")   # y: same multiplicative spacing
 ```
+
+Use log scale when values span orders of magnitude. Data must be **> 0** on a log axis.
 
 ---
 
