@@ -13,6 +13,7 @@ The goal is **not to memorize APIs**. Remember the concepts and patterns, then s
 | [`matplotlib-cheatsheet.md`](matplotlib-cheatsheet.md) | Figures, axes, line/scatter/bar/hist plots, labels, annotations, layouts, saving |
 | [`seaborn-cheatsheet.md`](seaborn-cheatsheet.md) | Statistical plots, distributions, categorical plots, regression, heatmaps, faceting |
 | [`ml-workflow-cheatsheet.md`](ml-workflow-cheatsheet.md) | End-to-end tabular ML workflow with example data and scikit-learn |
+| [`pytorch-cheatsheet.md`](pytorch-cheatsheet.md) | Tensors, autograd, nn.Module, training loops, losses, optimizers, DataLoader, GPU/AMP |
 
 ## Typical imports
 
@@ -47,6 +48,7 @@ from sklearn.model_selection import train_test_split
 - Matplotlib: https://matplotlib.org/stable/
 - Seaborn: https://seaborn.pydata.org/
 - scikit-learn: https://scikit-learn.org/stable/
+- PyTorch: https://pytorch.org/docs/stable/
 
 ## Philosophy
 
